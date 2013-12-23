@@ -1,0 +1,62 @@
+#emailSub_admin {
+	width:850px;	
+}
+#emailSub_admin #emailSub_form{
+	float:left;	
+}
+
+#emailSub_admin #emailSub_form table tr td:first-child{
+	vertical-align:top;
+	padding-top:5px;
+}
+
+#emailSub_admin #emailSub_form table tr td p{
+	width:400px;
+	margin-top:3px;
+}
+
+#emailSub_admin .box{
+ width:300px;
+ border:1px solid black;
+ float:left;
+ padding: 10px;
+ margin-left:20px;
+ margin-bottom:20px;
+ border-radius:5px;
+}
+
+#emailSub_admin #emailSub_testEmailform{
+
+}
+
+#emailSub_admin #emailSub_webfish{
+
+}
+
+#emailSub_admin #emailSub_webfishLogo{
+
+}
+
+
+/****************
+* GENERAL STUFF *
+****************/	
+#emailSub_admin .clear{
+	clear:both;
+}
+
+#emailSub_admin .alignleft{
+	float:left;
+}
+#emailSub_admin .alignright{
+	float:right;
+}
+
+
+/**********
+* H T M L *
+**********/
+#emailSub_admin textarea{
+	width:400px;
+	height:200px;
+}
