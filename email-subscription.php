@@ -38,7 +38,13 @@ include_once dirname(__FILE__)."/admin.php";
  */
 function emailSub_ajaxCallback() {
 	
-	$email=$_POST['email'];
+	$email = $_POST['email'];
+    global $polylang;
+    if(isset($polylang)) {
+        $language = $_POST['language'];
+    } else {
+        $language = "";
+    }
 
 	//validate email
 	if(!is_email($email)){
@@ -49,7 +55,7 @@ function emailSub_ajaxCallback() {
 	}
 	
 	$emailDB=new EmailSubscriptionDatabase();
-	if(!$emailDB->addEmail($email)){
+	if(!$emailDB->addEmail($email, $language)){
 		die(json_encode(array(
 				'status'=>500,
 		)));
@@ -72,20 +78,40 @@ function emailSub_sendEmails(){
 	$emails=$emailDb->getEmailsToSendSubscriptionMails($emailsToSend,5);
 	
 	//get some values from settings
-	$org_subject=get_option('emailSub-subject');
-	$org_body=get_option('emailSub-body');
-	$fromName=get_option('emailSub-from_name');
-	$fromMail=get_option('emailSub-from_email');
-	
-	//prepare headers to send in HTML
-	$headers  = 'MIME-Version: 1.0' . "\r\n";
-	$headers .= 'Content-type: text/html; charset=UTF-8' . "\r\n";
-	$headers .='From: "'.$fromName.'" <'.$fromMail.'>';
+    global $polylang;
+    if(!isset($polylang)) {
+        $org_subject=get_option('emailSub-subject');
+        $org_body=get_option('emailSub-body');
+        $fromName=get_option('emailSub-from_name');
+        $fromMail=get_option('emailSub-from_email');
+    }
 	
 	
 	$body=array();
 	$subject=array();
+    $languages=array();
 	foreach($emails as $email){
+        
+        if(isset($polylang)) {
+            if(!isset($mos[$email['language']])) {
+                $language = $polylang->model->get_language($email['language']); // import_from_db expects a language object
+                $mos[$email['language']] = new PLL_MO();
+                $mos[$email['language']]->import_from_db($language); // import all translations in $language
+            }
+
+            // then you can translated any registered string with:
+            $org_subject = $mos[$email['language']]->translate("Subject");
+            $org_body = $mos[$email['language']]->translate("Body");
+            $fromName = $mos[$email['language']]->translate("From name");
+            $fromMail = $mos[$email['language']]->translate("From mail");
+        }
+        
+        
+        //prepare headers to send in HTML
+        $headers  = 'MIME-Version: 1.0' . "\r\n";
+        $headers .= 'Content-type: text/html; charset=UTF-8' . "\r\n";
+        $headers .='From: "'.$fromName.'" <'.$fromMail.'>';
+        
 		$to=$email['email'];
 		$post_id=$email['post_id'];
 		
@@ -180,7 +206,13 @@ function emailSub_publishPost($post){
 	
 	//move to all emails to spool
 	$emailDb=new EmailSubscriptionDatabase();
-	$emailDb->addAllToSpool($postId);
+    global $polylang;
+    if(isset($polylang)) {
+        $language = $polylang->get_post_language($postId)->slug;
+    } else {
+        $language = "";
+    }
+	$emailDb->addAllToSpool($postId, $language);
 	
 	//tell the cron to run in 15 minutes
 	emailSub_tellCron(15);
@@ -207,7 +239,7 @@ function emailSub_getExcerpt( $post ) {
 	$output = apply_filters('the_content', $output);
 	$output = str_replace(']]>', ']]&gt;', $output);
 	$excerpt_length = apply_filters('excerpt_length', 55);
-	$excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
+	$excerpt_more = apply_filters('excerpt_more', ' [...]');
 	$output = wp_trim_words( $output, $excerpt_length, $excerpt_more );
 	
 	return apply_filters('get_the_excerpt', $output);
@@ -248,6 +280,11 @@ class EmailSubscriptionWidget extends WP_Widget {
     	<form id="emailSub-form" action="<?php echo site_url('wp-admin/admin-ajax.php')?>">
     		<input type="hidden" name="success_msg" id="emailSub-success" value="<?php echo $instance['success_msg'];?>" />
     		<input type="hidden" name="fail_msg" id="emailSub-fail" value="<?php echo $instance['fail_msg'];?>" />
+            <?php
+            global $polylang;
+            if(isset($polylang)) { ?>
+                <input type="hidden" name="language" id="emailSub-language" value="<?php echo pll_current_language();?>" />
+            <?php } ?>
 			<input type="text" name="email" id="emailSub-email" placeholder="Email:" />
 			<br />			
 			<input type="submit" class="submit" value="<?php echo $instance['submit_button'];?>" />
@@ -370,6 +407,7 @@ function emailSub_install(){
 		$sql .= "CREATE TABLE " . $table_name . " (
 		  email_id INTEGER  NOT NULL AUTO_INCREMENT,
 		  email VARCHAR(255)  NOT NULL,
+          language VARCHAR(255)  NOT NULL,
 		  PRIMARY KEY (email_id)
 		);
 		";
@@ -462,7 +500,7 @@ class EmailSubscriptionDatabase{
 	 * 
 	 * @param unknown_type $email
 	 */
-	public function addEmail($email){
+	public function addEmail($email, $language = ""){
 		global $wpdb;
 		
 		$email=trim($email);
@@ -470,8 +508,8 @@ class EmailSubscriptionDatabase{
 		//check if exists
 		$res=$wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$this->address_table} WHERE email='%s'"
-			,array($email)
+				"SELECT * FROM {$this->address_table} WHERE email='%s' AND language ='%s'"
+			,array($email, $language)
 		));
 		
 		if($res)
@@ -480,8 +518,8 @@ class EmailSubscriptionDatabase{
 		//insert
 		$wpdb->query(
 			$wpdb->prepare("INSERT INTO {$this->address_table} SET "
-				."email='%s' "
-			,array($email)
+				."email='%s', language='%s' "
+			,array($email, $language)
 		));
 		
 		return true;
@@ -503,7 +541,7 @@ class EmailSubscriptionDatabase{
 		
 		$results=$wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT a.email, s.post_id, s.spool_id FROM {$this->spool_table} s, {$this->address_table} a WHERE a.email_id=s.email_id ORDER BY spool_id LIMIT %d"
+				"SELECT a.email, a.language, s.post_id, s.spool_id FROM {$this->spool_table} s, {$this->address_table} a WHERE a.email_id=s.email_id ORDER BY spool_id LIMIT %d"
 			,array($limit))
 		,ARRAY_A);
 		
@@ -541,7 +579,7 @@ class EmailSubscriptionDatabase{
 	public function getAllEmails(){
 		global $wpdb;
 		
-		return $wpdb->get_results("SELECT * FROM {$this->address_table}");
+		return $wpdb->get_results("SELECT * FROM {$this->address_table} ORDER BY language");
 	}
 	
 	/**
@@ -549,14 +587,13 @@ class EmailSubscriptionDatabase{
 	 * 
 	 * @param unknown_type $postId
 	 */
-	public function addAllToSpool($postId){
+	public function addAllToSpool($postId, $language = ""){
 		global $wpdb;
-	
 		$wpdb->query(
 			$wpdb->prepare(
 				"INSERT INTO {$this->spool_table} (email_id, post_id) 
-					SELECT a.email_id, '%d' FROM {$this->address_table} a"
-			,array($postId))
+					SELECT a.email_id, '%d' FROM {$this->address_table} a WHERE language='%s'"
+			,array($postId, $language))
 		);
 	}
 	

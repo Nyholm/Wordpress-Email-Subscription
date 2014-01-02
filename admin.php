@@ -20,8 +20,19 @@ function emailSub_admin_init(){
 function emailSub_admin_styles(){
 	wp_enqueue_style('emailSubStyleAdmin');
 }
-function emailSub_admin(){
 
+function emailSub_initPolylang() {
+    global $polylang;
+    if(isset($polylang)) {
+        pll_register_string("From name", "From name", "Email Subscription");
+        pll_register_string("From mail", "From mail", "Email Subscription");
+        pll_register_string("Subject", "Subject", "Email Subscription");
+        pll_register_string("Body", "Body", "Email Subscription", true);
+    }
+}
+add_action('plugins_loaded', 'emailSub_initPolylang');
+
+function emailSub_admin(){
 	$emailDb=new EmailSubscriptionDatabase();
 	?><div id='emailSub_admin'><h1>Email Subscriptions</h1><?php 
 	
@@ -65,9 +76,8 @@ function emailSub_admin(){
 		$fromName=get_option('emailSub-from_name');
 		$fromMail=get_option('emailSub-from_email');
 	}
-	
-	
-	if(isset($_POST['do'])){
+    
+    if(isset($_POST['do'])){
 		//Test email
 		if($_POST['do']=='testEmail'){
 			$headers='From: "'.$fromName.'" <'.$fromMail.'>';
@@ -104,7 +114,44 @@ function emailSub_admin(){
 	/*
 	 * write html
 	 */	
-	
+	global $polylang;
+    if(isset($polylang)) {
+        ?>
+        Since you are using Polylang, you have to edit the strings below on the Polylang Strings Translation page.
+        <table>
+			<tr><td colspan="2">
+				<h3>Who are sending mails to the visitors?</h3>
+				</td>
+			</tr>
+			<tr>
+				<td>Name:</td>
+				<td><input type="text" name="from_name" value="<?php echo (pll__("From name"));?>" disabled="disabled" /></td>
+			</tr>
+			<tr>
+				<td>Email:</td>
+				<td><input type="text" name="from_email" value="<?php echo stripslashes(pll__("From mail"));?>" disabled="disabled" /></td>
+			</tr>
+			<tr><td colspan="2">
+				<h3>What is the content of the mails?</h3>
+				</td>
+			</tr>
+			<tr>
+				<td>Subject:</td>
+				<td><input type="text" name="subject" value="<?php echo stripslashes(pll__("Subject"));?>" disabled="disabled" /></td>
+			</tr>
+			<tr>
+				<td>Message:</td>
+				<td><textarea name="body" disabled="disabled"><?php echo stripslashes(pll__("Body"));?></textarea></td>
+			</tr>
+			<tr>
+				<td>Hint:</td>
+				<td><p>HTML is allowed. You may use the following variables: <i>%post_title%, %post_excerpt%, 
+				%post_content%, %post_author%, %post_date%, %post_url%
+				%site_url%, %unsubscribe_url%</i></p></td>
+			</tr>
+		</table>
+        <?php
+    } else {
 	?>
 	<form action="" method="POST" id="emailSub_form">
 		<input type="hidden" name="nonce" value="<?php echo wp_create_nonce("ejamju03fxfg"); ?>" />
@@ -144,6 +191,9 @@ function emailSub_admin(){
 		
 		<input type="submit" value="Save" />
 	</form>
+    <?php
+    }
+    ?>
 	
 	
 	<form action="" method="POST" id="emailSub_testEmailform" class="box">
@@ -168,18 +218,31 @@ function emailSub_admin(){
 	<div class="clear"></div>
 	<hr />
 	<h2>Current subscribers</h2>
-	<ul id="emailSub_subscrptions">	
+	<table id="emailSub_subscrptions">
+        <tr><td><b>E-mail address</b></td>
+        <?php
+            if(isset($polylang)) {
+                echo "<td><b>Language</b></td>";
+            }
+            ?>
+        <td><b>Remove</b></td></tr>
 		<?php foreach ($subscriptions as $i=>$subscriber): ?>
-			<li>
-			<form action="" method="POST" id="email_sub_<?php echo $i; ?>">
+			<tr>
+            <td><?php echo $subscriber->email; ?></td>
+            <?php
+            if(isset($polylang)) {
+                echo "<td>".$subscriber->language."</td>";
+            }
+            ?>
+			<td><form action="" method="POST" id="email_sub_<?php echo $i; ?>">
 				<input type="hidden" name="nonce" value="<?php echo wp_create_nonce("ejamju03fxfg"); ?>" />
 				<input type="hidden" name="do" value="removeSubscriber" />
 				<input type="hidden" name="email" value="<?php echo $subscriber->email;?>" />
-				<?php echo $subscriber->email;?> <a href="javascript:void(0)" onclick="if (confirm('Are you sure to remove this email?')) document.getElementById('email_sub_<?php echo $i; ?>').submit()";>Remove</a>
-			</form>
-			</li>
+				 <a href="javascript:void(0)" onclick="if (confirm('Are you sure to remove this email?')) document.getElementById('email_sub_<?php echo $i; ?>').submit()";>Remove</a>
+			</form></td>
+			</tr>
 		<?php endforeach; ?>
-	</ul>
+	</table>
 	
 	</div> <!-- End: emailSub_admin -->
 	
