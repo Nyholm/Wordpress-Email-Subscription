@@ -8,7 +8,8 @@ jQuery(document).ready(function(){
 		//send message
 		jQuery.post(form.attr("action"),{
 			action: 'email_subscription',
-			email:jQuery("#emailSub-email").val()
+			email:jQuery("#emailSub-email").val(),
+            language:jQuery("#emailSub-language").val()
 		},function(data){
 			if(data.status==200){
 				jQuery("#emailSub-output")

@@ -3,7 +3,7 @@ Contributors: tnyholm
 Tags: widget, post, page, sidebar, email, subscription
 Donate link: http://www.webfish.se/wp/donate
 Requires at least: 2.8.1
-Tested up to: 3.3.1
+Tested up to: 3.5.1
 Stable tag: trunk
 
 Let the visitors subscribe to your future posts by email. A simple widget to register their email and they wont
