@@ -12,6 +12,7 @@ function emailSub_admin_export(){
 
     //get all subscribers
     $subscriptions=$emailDb->getAllEmails();
+    global $polylang;
 
 	?><div id='emailSub_admin' class="emailSub-export">
     <h1>Export</h1>

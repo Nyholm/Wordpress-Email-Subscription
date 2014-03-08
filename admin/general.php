@@ -2,8 +2,8 @@
 
 function emailSub_admin_general(){
 	?><div id='emailSub_admin'><h1>Email Subscriptions</h1>
+
     <?php
-	
 
 	if(isset($_POST['do']) && $_POST['do']=='updateSettings'){
 		if (! wp_verify_nonce($_POST['nonce'], 'ejamju03fxfg') ) die('Security check'); 
@@ -47,37 +47,14 @@ function emailSub_admin_general(){
 		$fromMail=get_option('emailSub-from_email');
         $promotion=get_option('emailSub-promotion', true);
 	}
-    
-    if(isset($_POST['do'])){
-		//Test email
-		if($_POST['do']=='testEmail'){
-			$headers='From: "'.$fromName.'" <'.$fromMail.'>';
-			if(wp_mail(
-					get_option('admin_email'),
-					"Test email",
-					"Your server can send emails. \n Timestamp: ".date('Y-m-d H:i:s'),
-					$headers
-				)){//succeed
-				//print message
-				?>
-					<div class="updated"><p>A test email was sent to <?php echo get_option('admin_email');?>.</p></div>
-				<?php 
-			}
-			else{
-				//print message
-				?>
-				<div class="error"><p>We failed to send a test email.</p></div>
-				<?php 
-			}
-		}
-		//remove
-		elseif($_POST['do']=='removeSubscriber'){
-			$emailDb=new EmailSubscriptionDatabase();
-			$emailDb->removeEmail($_POST['email']);
-		}
-	}
-
+?>
+    <div class="emailSub-leftCol">
+<?php
 	global $polylang;
+    if(isset($polylang)) {
+        ?>
+        <p><b>Since you are using Polylang, you have to edit some of the strings below on the Polylang Strings Translation page.</b></p>
+       <?php }
     ?>
 	<form action="" method="POST" id="emailSub_form">
 		<input type="hidden" name="nonce" value="<?php echo wp_create_nonce("ejamju03fxfg"); ?>" />
@@ -119,7 +96,7 @@ function emailSub_admin_general(){
             </tr>
             <tr>
                 <td></td>
-                <td><input type="checkbox" name="promotion" <?php if ($promotion) echo 'checked="checked"';?> />Of course!
+                <td><input type="checkbox" name="promotion" <?php if ($promotion) echo 'checked="checked"';?> />Of course
                 I want to show a link to Webfish.se as a thank you <br />for giving me this plugin for free.
                 </td>
             </tr>
@@ -127,27 +104,20 @@ function emailSub_admin_general(){
 		
 		<input type="submit" value="Save" />
 	</form>
+    </div>
+    <div class="emailSub-rightCol">
+        <div id="emailSub_webfish" class="box">
+            <h3>Webfish</h3>
+            <div id="emailSub_webfishLogo"></div>
+            <p>We made this plugin for you. To see some of our wordpress related work
+            please follow this <a href="http://www.webfish.se/wp" target="_blank">link</a>.
+            There are both themes and plugins.</p>
+            <span class="alignright">
+                - <a href="http://www.webfish.se" target="_blank">Webfish</a>
+            </span>
+        </div>
 
-	
-	<form action="" method="POST" id="emailSub_testEmailform" class="box">
-		<input type="hidden" name="do" value="testEmail" />
-		<h3>Test your server configuration</h3>
-		<p>Test if your server configuration is allowing you to send emails.</p>
-		<p>Remember to save the settings (if you have done any changes) before you click 'Test'.</p>
-		<input type="Submit" value="Test" />
-	</form>
-
-	<div id="emailSub_webfish" class="box">
-		<h3>Webfish</h3>
-		<div id="emailSub_webfishLogo"></div>
-		<p>We made this plugin for you. To see some of our wordpress related work
-		please follow this <a href="http://www.webfish.se/wp" target="_blank">link</a>. 
-		There are both themes and plugins.</p>
-		<span class="alignright">
-			- <a href="http://www.webfish.se" target="_blank">Webfish</a>
-		</span>
-	</div>
-	
+    </div>
 	<div class="clear"></div>
 
 	

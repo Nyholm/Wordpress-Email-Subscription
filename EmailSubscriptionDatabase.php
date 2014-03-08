@@ -87,9 +87,15 @@ class EmailSubscriptionDatabase{
         //remove these emails from spool
         $wpdb->query("DELETE FROM {$this->spool_table} WHERE spool_id IN (".implode(',',$spoolIds).")");
 
-        $count = $wpdb->get_var("SELECT count(email_id) FROM {$this->spool_table} ");
+        $count = $this->getSpoolCount();
 
         return $results;
+    }
+
+    public function getSpoolCount() {
+        global $wpdb;
+
+        return $wpdb->get_var("SELECT count(email_id) FROM {$this->spool_table} ");
     }
 
     /**
@@ -98,7 +104,7 @@ class EmailSubscriptionDatabase{
     public function getAllEmails(){
         global $wpdb;
 
-        return $wpdb->get_results("SELECT * FROM {$this->address_table} ORDER BY language");
+        return $wpdb->get_results("SELECT * FROM {$this->address_table} ORDER BY language, email_id");
     }
 
     /**

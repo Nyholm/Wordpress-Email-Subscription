@@ -52,6 +52,14 @@
 	float:right;
 }
 
+.emailSub-leftCol, .emailSub-rightCol {
+    float:left;
+    width: 65%;
+}
+
+.emailSub-rightCol {
+    width: 30%;
+}
 
 /**********
 * H T M L *

@@ -34,13 +34,3 @@ function emailSub_admin_styles(){
 	wp_enqueue_style('emailSubStyleAdmin');
 }
 
-function emailSub_initPolylang() {
-    global $polylang;
-    if(isset($polylang)) {
-        pll_register_string("From name", "From name", "Email Subscription");
-        pll_register_string("From mail", "From mail", "Email Subscription");
-        pll_register_string("Subject", "Subject", "Email Subscription");
-        pll_register_string("Body", "Body", "Email Subscription", true);
-    }
-}
-add_action('plugins_loaded', 'emailSub_initPolylang');

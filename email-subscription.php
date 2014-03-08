@@ -87,7 +87,7 @@ function emailSub_sendEmails(){
 	$body=array();
 	$subject=array();
 	foreach($emails as $email){
-        //TODO verify this
+
         if(isset($polylang)) {
             if(!isset($mos[$email['language']])) {
                 $language = $polylang->model->get_language($email['language']); // import_from_db expects a language object
@@ -307,9 +307,20 @@ function emailSub_install(){
     dbDelta($sql);
     add_option("emailSub_db_version", $emailSub_db_version);
 
-
+    emailSub_initPolylang();
 }
 register_activation_hook(__FILE__,'emailSub_install');
+
+
+function emailSub_initPolylang() {
+    global $polylang;
+    if(isset($polylang)) {
+        pll_register_string("From name", get_option('emailSub-from_name'), "Email Subscription");
+        pll_register_string("Subject", get_option('emailSub-subject'), "Email Subscription");
+        pll_register_string("Body", get_option('emailSub-body'), "Email Subscription", true);
+    }
+}
+
 
 /**
  * We need to parse the query to see if someone tries to unsubscribe
