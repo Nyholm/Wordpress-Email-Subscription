@@ -232,6 +232,10 @@ function emailSub_getExcerpt( $post ) {
 		$output = __('There is no excerpt because this is a protected post.');
 		return $output;
 	}
+
+    if (!empty($post->post_excerpt)) {
+        return $post->post_excerpt;
+    }
 	
 	$output=$post->post_content;
 	$output = strip_shortcodes( $output );
