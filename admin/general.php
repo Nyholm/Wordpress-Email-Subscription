@@ -1,7 +1,6 @@
 <?php
 
 function emailSub_admin_general(){
-	$emailDb=new EmailSubscriptionDatabase();
 	?><div id='emailSub_admin'><h1>Email Subscriptions</h1>
     <?php
 	
@@ -13,7 +12,8 @@ function emailSub_admin_general(){
 		$body=$_POST['body'];
 		$fromName=$_POST['from_name'];
 		$fromMail=$_POST['from_email'];
-		
+        $promotion=$_POST['promotion'];
+
 		if( $fromName=="" ||
 			$fromMail=="" ||
 			$subject=="" ||
@@ -29,7 +29,8 @@ function emailSub_admin_general(){
 			update_option('emailSub-body',$body);
 			update_option('emailSub-from_name',$fromName);
 			update_option('emailSub-from_email',$fromMail);
-			
+			update_option('emailSub-promotion',$promotion);
+
 					
 			//print message
 			?>
@@ -44,6 +45,7 @@ function emailSub_admin_general(){
 		$body=get_option('emailSub-body');
 		$fromName=get_option('emailSub-from_name');
 		$fromMail=get_option('emailSub-from_email');
+        $promotion=get_option('emailSub-promotion', true);
 	}
     
     if(isset($_POST['do'])){
@@ -74,14 +76,7 @@ function emailSub_admin_general(){
 			$emailDb->removeEmail($_POST['email']);
 		}
 	}
-			
 
-	
-
-	
-	/*
-	 * write html
-	 */	
 	global $polylang;
     ?>
 	<form action="" method="POST" id="emailSub_form">
@@ -118,6 +113,16 @@ function emailSub_admin_general(){
 				%post_content%, %post_author%, %post_date%, %post_url%
 				%site_url%, %unsubscribe_url%</i></p></td>
 			</tr>
+            <tr><td colspan="2">
+                    <h3>Show Webfish some gratitude?</h3>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="checkbox" name="promotion" <?php if ($promotion) echo 'checked="checked"';?> />Of course!
+                I want to show a link to Webfish.se as a thank you <br />for giving me this plugin for free.
+                </td>
+            </tr>
 		</table>
 		
 		<input type="submit" value="Save" />

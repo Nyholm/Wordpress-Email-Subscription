@@ -277,6 +277,7 @@ function emailSub_install(){
 			"\n\n\n\n To unsubscribe from future mail, follow this link: %unsubscribe_url% ");
 	add_option('emailSub-from_name','Admin at '.get_option('blogname'));
 	add_option('emailSub-from_email',get_option('admin_email'));
+	add_option('emailSub-promotion',true);
 	add_option("emailSub-posts_processed", array());
 	
 	/*

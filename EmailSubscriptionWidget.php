@@ -36,6 +36,7 @@ class EmailSubscriptionWidget extends WP_Widget {
      */
     public function widget($args, $instance) {
         extract($args, EXTR_SKIP);
+        $promotion=get_option('emailSub-promotion', true);
 
         /*
          * Print widget
@@ -59,7 +60,10 @@ class EmailSubscriptionWidget extends WP_Widget {
                 <input type="text" name="email" id="emailSub-email" placeholder="Email:" />
                 <br />
                 <input type="submit" class="submit" value="<?php echo $instance['submit_button'];?>" />
-
+                <?php if ($promotion): ?>
+                <br />
+                <div style="margin-top: 0.4em; font-size: 70%;">Created by <a href="http://www.webfish.se">Webfish</a>.</div>
+                <?php endif; ?>
             </form>
 
 
