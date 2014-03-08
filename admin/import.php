@@ -1,40 +1,9 @@
 <?php
 
-function emailSub_menu() {
-	$page=array();
-	
-  	//parent, title, link, rights, url, function
-  	$page[]=add_submenu_page('options-general.php',"Email Subscription", "Email Subscription",'manage_options','email-subscription', 'emailSub_admin');
-  	
-  	foreach($page as $p)
-  		add_action('admin_print_styles-' . $p, 'emailSub_admin_styles');
-}
-add_action('admin_menu', 'emailSub_menu');
-add_action('admin_init', 'emailSub_admin_init');
-
-
-function emailSub_admin_init(){
-	wp_register_style('emailSubStyleAdmin', WP_PLUGIN_URL . '/email-subscription/assets/admin.css');
-}
-
-function emailSub_admin_styles(){
-	wp_enqueue_style('emailSubStyleAdmin');
-}
-
-function emailSub_initPolylang() {
-    global $polylang;
-    if(isset($polylang)) {
-        pll_register_string("From name", "From name", "Email Subscription");
-        pll_register_string("From mail", "From mail", "Email Subscription");
-        pll_register_string("Subject", "Subject", "Email Subscription");
-        pll_register_string("Body", "Body", "Email Subscription", true);
-    }
-}
-add_action('plugins_loaded', 'emailSub_initPolylang');
-
-function emailSub_admin(){
+function emailSub_admin_import(){
 	$emailDb=new EmailSubscriptionDatabase();
-	?><div id='emailSub_admin'><h1>Email Subscriptions</h1><?php 
+	?><div id='emailSub_admin'><h1>Email Subscriptions</h1>
+    <?php
 	
 
 	if(isset($_POST['do']) && $_POST['do']=='updateSettings'){

@@ -29,8 +29,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //add action for the cron
 add_action('execute_emailSub_sendEmails', 'emailSub_sendEmails',10,0);
 
-//Load admin
-include_once dirname(__FILE__)."/admin.php";
+//Load admin stuff
+include_once dirname(__FILE__)."/admin/init.php";
+include_once dirname(__FILE__)."/EmailSubscriptionWidget.php";
+include_once dirname(__FILE__)."/EmailSubscriptionDatabase.php";
 
 /**
  * When a user fills in the form and press send this action will take place
@@ -39,12 +41,7 @@ include_once dirname(__FILE__)."/admin.php";
 function emailSub_ajaxCallback() {
 	
 	$email = $_POST['email'];
-    global $polylang;
-    if(isset($polylang)) {
-        $language = $_POST['language'];
-    } else {
-        $language = "";
-    }
+    $language = isset($_POST['language'])?$_POST['language']:'';
 
 	//validate email
 	if(!is_email($email)){
@@ -75,23 +72,22 @@ add_action('wp_ajax_nopriv_email_subscription', 'emailSub_ajaxCallback');
 function emailSub_sendEmails(){
 	$emailsToSend=0;
 	$emailDb=new EmailSubscriptionDatabase();
+    //TODO make this 5 configurable
 	$emails=$emailDb->getEmailsToSendSubscriptionMails($emailsToSend,5);
 	
 	//get some values from settings
     global $polylang;
-    if(!isset($polylang)) {
-        $org_subject=get_option('emailSub-subject');
-        $org_body=get_option('emailSub-body');
-        $fromName=get_option('emailSub-from_name');
-        $fromMail=get_option('emailSub-from_email');
-    }
+    $org_subject=get_option('emailSub-subject');
+    $org_body=get_option('emailSub-body');
+    $fromName=get_option('emailSub-from_name');
+    $fromMail=get_option('emailSub-from_email');
+
 	
 	
 	$body=array();
 	$subject=array();
-    $languages=array();
 	foreach($emails as $email){
-        
+        //TODO verify this
         if(isset($polylang)) {
             if(!isset($mos[$email['language']])) {
                 $language = $polylang->model->get_language($email['language']); // import_from_db expects a language object
@@ -115,7 +111,7 @@ function emailSub_sendEmails(){
 		$to=$email['email'];
 		$post_id=$email['post_id'];
 		
-		//create post specific body and subject if not allready created
+		//create post specific body and subject if not already created
 		if(!isset($body[$post_id]) || !isset($subject[$post_id])){
 			$post=get_post($post_id);
 			
@@ -125,7 +121,7 @@ function emailSub_sendEmails(){
 			$subject[$post_id]='=?UTF8?B?'.base64_encode(emailSub_prepareString($org_subject, $post)).'?=';
 		}
 		
-		//add unsubsribe url
+		//add unsubscribe url
 		$code=substr(md5('little-more'.$to.'secure'),3,16);
 		$user_body=str_replace(
 				'%unsubscribe_url%',
@@ -133,12 +129,10 @@ function emailSub_sendEmails(){
 				$body[$post_id]
 			);
 
-
 		//send mail
 		wp_mail($to,$subject[$post_id],$user_body,$headers);
 	}
-	
-	
+
 	//send more email asap
 	if($emailsToSend>0)
 		emailSub_tellCron(1);
@@ -203,18 +197,16 @@ function emailSub_publishPost($post){
 	//we dont want to process this post again
 	$processedPosts[]=$postId;
 	update_option('emailSub-posts_processed', $processedPosts);
-	
+
+    global $polylang;
+    $language = isset($polylang)?$polylang->get_post_language($postId)->slug:'';
+
 	//move to all emails to spool
 	$emailDb=new EmailSubscriptionDatabase();
-    global $polylang;
-    if(isset($polylang)) {
-        $language = $polylang->get_post_language($postId)->slug;
-    } else {
-        $language = "";
-    }
 	$emailDb->addAllToSpool($postId, $language);
 	
 	//tell the cron to run in 15 minutes
+    //TODO make sure this is configurable
 	emailSub_tellCron(15);
 }
 add_action('auto-draft_to_publish', 'emailSub_publishPost',100);
@@ -248,121 +240,6 @@ function emailSub_getExcerpt( $post ) {
 	
 	return apply_filters('get_the_excerpt', $output);
 }
-
-class EmailSubscriptionWidget extends WP_Widget {
-  private $defaults = array(
-                          'title' => 'Subscribe to my posts',
-                          'success_msg'=>'Thank you for subscribing',
-                          'fail_msg' => 'Some unexpected error occurred',
-  						'submit_button'=>'Subscribe',
-                        );  
-  
-  public function __construct() {
-    $options = array(
-                  'classname' => 'EmailSubscriptionWidget',
-                  'description' => __('Displays subpages for the current page.','email-subscription')
-                );
-    $this->WP_Widget('EmailSubscriptionWidget', 'Email Subscription Widget', $options);             
-    add_filter( 'plugin_action_links', array(&$this, 'plugin_action_links'), 10, 2 );
-  }
-  
-  public function widget($args, $instance) {
-    extract($args, EXTR_SKIP);
-   
-
-    /*
-     * Print widget
-     */
-    echo $before_widget;
-     
-    if(strlen($instance['title']) > 0){
-    	echo $before_title.$instance['title'].$after_title;
-    }
-    ?>
-    <ul id='emailSub-widget'>
-    	<div id="emailSub-output" style="display:none;"></div>
-    	<form id="emailSub-form" action="<?php echo site_url('wp-admin/admin-ajax.php')?>">
-    		<input type="hidden" name="success_msg" id="emailSub-success" value="<?php echo $instance['success_msg'];?>" />
-    		<input type="hidden" name="fail_msg" id="emailSub-fail" value="<?php echo $instance['fail_msg'];?>" />
-            <?php
-            global $polylang;
-            if(isset($polylang)) { ?>
-                <input type="hidden" name="language" id="emailSub-language" value="<?php echo pll_current_language();?>" />
-            <?php } ?>
-			<input type="text" name="email" id="emailSub-email" placeholder="Email:" />
-			<br />			
-			<input type="submit" class="submit" value="<?php echo $instance['submit_button'];?>" />
-    	
-    	</form>
-    	
-    
-    
-    </ul>
-    <?php 
-    echo $after_widget;
-    
-    
-    
-  }
-  
-
-  
-
- public function update($new_instance, $old_instance) {
-    $instance = $old_instance;
-	    
-    return $new_instance;
-  }
-  
-  public function form($instance) {
-    $instance = wp_parse_args( (array) $instance, $this->defaults);
-
-    $title = $instance['title'];
-    $success = $instance['success_msg'];
-    $fail = $instance['fail_msg'];
-    $submit = $instance['submit_button'];
-?>
-
-
-  <p>
-    <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e("Title:",'email-subscription');?></label><br />
-      <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr($title); ?>" />
-  </p>
-  <p>
-    <label for="<?php echo $this->get_field_id('success_msg'); ?>"><?php _e("Message if succeed:",'email-subscription');?></label><br />
-      <input class="widefat" id="<?php echo $this->get_field_id('success_msg'); ?>" name="<?php echo $this->get_field_name('success_msg'); ?>" type="text" value="<?php echo esc_attr($success); ?>" />
-  </p>
-  <p>
-    <label for="<?php echo $this->get_field_id('fail_msg'); ?>"><?php _e("Message if fail:",'email-subscription');?></label><br />
-      <input class="widefat" id="<?php echo $this->get_field_id('fail_msg'); ?>" name="<?php echo $this->get_field_name('fail_msg'); ?>" type="text" value="<?php echo esc_attr($fail); ?>" />
-  </p>
-  <p>
-    <label for="<?php echo $this->get_field_id('submit_button'); ?>"><?php _e("Text on submit button:",'email-subscription');?></label><br />
-      <input class="widefat" id="<?php echo $this->get_field_id('submit_button'); ?>" name="<?php echo $this->get_field_name('submit_button'); ?>" type="text" value="<?php echo esc_attr($submit); ?>" />
-  </p>
-
-
-<?php
-  }
-
-  public function plugin_action_links( $links, $file ) {
-    static $this_plugin;
-    
-    if( empty($this_plugin) )
-      $this_plugin = plugin_basename(__FILE__);
-
-    if ( $file == $this_plugin )
-      $links[] = '<a href="' . admin_url( 'widgets.php' ) . '">Widgets</a>';
-    
-    return $links;
-  }
-  
-  
-}
-
-add_action('widgets_init', create_function('', 'return register_widget("EmailSubscriptionWidget");'));
-
-
 
 /**
  * Enqueue JavaScripts/CSS
@@ -403,39 +280,31 @@ function emailSub_install(){
 	add_option("emailSub-posts_processed", array());
 	
 	/*
-	 * Check if tabels exists
+	 * Check if tables exists
 	*/
 	$table_name = $wpdb->prefix . "emailSub_addresses";
 	$sql="";
-	if($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
-		$sql .= "CREATE TABLE " . $table_name . " (
-		  email_id INTEGER  NOT NULL AUTO_INCREMENT,
-		  email VARCHAR(255)  NOT NULL,
-          language VARCHAR(255)  NOT NULL,
-		  PRIMARY KEY (email_id)
-		);
-		";
-	}
+
+    $sql .= "CREATE TABLE " . $table_name . " (
+      email_id INTEGER  NOT NULL AUTO_INCREMENT,
+      email VARCHAR(255)  NOT NULL,
+      language VARCHAR(255)  NOT NULL,
+      PRIMARY KEY (email_id)
+    );";
+
 	
 	$table_name = $wpdb->prefix . "emailSub_spool";
-	if($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
-		$sql .= "CREATE TABLE " . $table_name . " (
-		spool_id INTEGER  NOT NULL AUTO_INCREMENT,
-		email_id VARCHAR(255)  NOT NULL,
-		post_id INTEGER  NOT NULL,
-		PRIMARY KEY (spool_id)
-		);
-		";
-	}
+    $sql .= "CREATE TABLE " . $table_name . " (
+    spool_id INTEGER  NOT NULL AUTO_INCREMENT,
+    email_id VARCHAR(255)  NOT NULL,
+    post_id INTEGER  NOT NULL,
+    PRIMARY KEY (spool_id)
+    );";
 
-	/*
-	 * if there was some sql to run.
-	*/
-	if($sql!=""){
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		dbDelta($sql);
-		add_option("emailSub_db_version", $emailSub_db_version);
-	}
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    add_option("emailSub_db_version", $emailSub_db_version);
 
 
 }
@@ -478,157 +347,3 @@ function emailSub_registerUrl(){
 	
 }
 add_action('init', 'emailSub_registerUrl');
-
-
-/**
- * A database class to simplify accessing wpdb
- * 
- * @author tobias
- *
- */
-class EmailSubscriptionDatabase{
-	
-	
-	private $address_table;
-	private $spool_table;
-	
-	public function __construct(){
-		global $wpdb;
-		
-		$this->address_table = $wpdb->prefix . "emailSub_addresses";
-		$this->spool_table = $wpdb->prefix . "emailSub_spool";
-	}
-	
-	/**
-	 * Returns true if email was added. It does also returns true if email already is in the database
-	 * 
-	 * @param unknown_type $email
-	 */
-	public function addEmail($email, $language = ""){
-		global $wpdb;
-		
-		$email=trim($email);
-		
-		//check if exists
-		$res=$wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$this->address_table} WHERE email='%s' AND language ='%s'"
-			,array($email, $language)
-		));
-		
-		if($res)
-			return true;//Allready exists
-		
-		//insert
-		$wpdb->query(
-			$wpdb->prepare("INSERT INTO {$this->address_table} SET "
-				."email='%s', language='%s' "
-			,array($email, $language)
-		));
-		
-		return true;
-	}
-	
-	/**
-	 * This fancy long named function does check for email addresses to send subsciption email to.
-	 * 
-	 * This function does also remove the email addresses from the email spool.
-	 * 
-	 * Max $limit emails are returned. $count is the total number of emails that havn't been mailed, 
-	 * excluding the ones returned now.  
-	 * 
-	 * @param int $count
-	 * @param int $limit
-	 */
-	public function getEmailsToSendSubscriptionMails(&$count, $limit=2){
-		global $wpdb;
-		
-		$results=$wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT a.email, a.language, s.post_id, s.spool_id FROM {$this->spool_table} s, {$this->address_table} a WHERE a.email_id=s.email_id ORDER BY spool_id LIMIT %d"
-			,array($limit))
-		,ARRAY_A);
-		
-		if(!$results){
-			$count=0;
-			return array();
-		}
-			
-		$spoolIds=array();
-		foreach($results as $idx=>$row){
-			//save id
-			$spoolIds[]=$row['spool_id'];
-			
-			//remove id from results
-			unset($results[$idx]['spool_id']);
-		}
-		
-		
-		//remove these emails from spool
-		$wpdb->query(
-				"DELETE FROM {$this->spool_table} "
-				."WHERE spool_id IN (".implode(',',$spoolIds).")"
-			);
-		
-		
-		$count= $wpdb->get_var("SELECT count(email_id) FROM {$this->spool_table} ");
-		
-		return $results;
-		
-	}
-	
-	/**
-	 * Returns all emails
-	 */
-	public function getAllEmails(){
-		global $wpdb;
-		
-		return $wpdb->get_results("SELECT * FROM {$this->address_table} ORDER BY language");
-	}
-	
-	/**
-	 * Copy all addresses from db to the email spool
-	 * 
-	 * @param unknown_type $postId
-	 */
-	public function addAllToSpool($postId, $language = ""){
-		global $wpdb;
-		$wpdb->query(
-			$wpdb->prepare(
-				"INSERT INTO {$this->spool_table} (email_id, post_id) 
-					SELECT a.email_id, '%d' FROM {$this->address_table} a WHERE language='%s'"
-			,array($postId, $language))
-		);
-	}
-	
-	/**
-	 * Removes an emails from spool and address table
-	 * 
-	 * @param string $email
-	 */
-	public function removeEmail($email){
-		global $wpdb;
-
-		//get id
-		$email_id= $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT email_id FROM {$this->address_table} WHERE email='%s' "
-				,array($email)));
-		
-		//remove from address table
-		$wpdb->query(
-			$wpdb->prepare("DELETE FROM {$this->address_table} "
-				."WHERE email_id='%d' "
-				,array($email_id)));
-		
-		//remove from spool table
-		$wpdb->query(
-				$wpdb->prepare("DELETE FROM {$this->spool_table} "
-				."WHERE email_id='%d' "
-				,array($email_id)));
-
-	}
-	
-	
-	
-}
