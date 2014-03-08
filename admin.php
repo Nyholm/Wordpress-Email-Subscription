@@ -115,44 +115,7 @@ function emailSub_admin(){
 	 * write html
 	 */	
 	global $polylang;
-    if(isset($polylang)) {
-        ?>
-        Since you are using Polylang, you have to edit the strings below on the Polylang Strings Translation page.
-        <table>
-			<tr><td colspan="2">
-				<h3>Who are sending mails to the visitors?</h3>
-				</td>
-			</tr>
-			<tr>
-				<td>Name:</td>
-				<td><input type="text" name="from_name" value="<?php echo (pll__("From name"));?>" disabled="disabled" /></td>
-			</tr>
-			<tr>
-				<td>Email:</td>
-				<td><input type="text" name="from_email" value="<?php echo stripslashes(pll__("From mail"));?>" disabled="disabled" /></td>
-			</tr>
-			<tr><td colspan="2">
-				<h3>What is the content of the mails?</h3>
-				</td>
-			</tr>
-			<tr>
-				<td>Subject:</td>
-				<td><input type="text" name="subject" value="<?php echo stripslashes(pll__("Subject"));?>" disabled="disabled" /></td>
-			</tr>
-			<tr>
-				<td>Message:</td>
-				<td><textarea name="body" disabled="disabled"><?php echo stripslashes(pll__("Body"));?></textarea></td>
-			</tr>
-			<tr>
-				<td>Hint:</td>
-				<td><p>HTML is allowed. You may use the following variables: <i>%post_title%, %post_excerpt%, 
-				%post_content%, %post_author%, %post_date%, %post_url%
-				%site_url%, %unsubscribe_url%</i></p></td>
-			</tr>
-		</table>
-        <?php
-    } else {
-	?>
+    ?>
 	<form action="" method="POST" id="emailSub_form">
 		<input type="hidden" name="nonce" value="<?php echo wp_create_nonce("ejamju03fxfg"); ?>" />
 		<input type="hidden" name="do" value="updateSettings" />
@@ -191,10 +154,7 @@ function emailSub_admin(){
 		
 		<input type="submit" value="Save" />
 	</form>
-    <?php
-    }
-    ?>
-	
+
 	
 	<form action="" method="POST" id="emailSub_testEmailform" class="box">
 		<input type="hidden" name="do" value="testEmail" />
@@ -246,8 +206,5 @@ function emailSub_admin(){
 	
 	</div> <!-- End: emailSub_admin -->
 	
-<?php 
-
-	
+<?php
 }
-
