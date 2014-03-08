@@ -37,7 +37,7 @@ function emailSub_admin_debug(){
             }
             emailSub_sendEmails();
             ?>
-            <div class="updated"><p>We forced to send some emails now.</p></div>
+            <div class="updated"><p>We just tried so send some emails by force.</p></div>
             <?php
 
         }
