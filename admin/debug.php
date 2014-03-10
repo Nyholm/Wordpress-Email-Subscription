@@ -58,11 +58,29 @@ function emailSub_admin_debug(){
             $nextRunDate->setTimestamp($nextRun);
             $now=new DateTime();
 
-            ?><p>The cron will run once again in <?php echo $now->diff($nextRunDate)->format('%r%i minutes and %s seconds'); ?></p>
-        <?php
+            if ($now->diff($nextRunDate)->format('%r%i') < -10) {
+                ?><p color="red">You have some problems with the wordpress cron. </p><?php
+            } else {
+                ?><p>The cron will run once again in <?php echo $now->diff($nextRunDate)->format('%r%i minutes and %s seconds'); ?></p><?php
+            }
         }
     ?>
 
+        <hr />
+        <h2>Common issues</h2>
+        <h3>Cron error</h3>
+        <p>If the emails is not sent automatically there is probably something wrong with the Wordpress cron. This is a
+        common bug in Wordpress 3.7.1 and later. To fix this you may try one of the following:</p>
+        <ol>
+            <li>Try to force to send emails by clicking at the button to the right</li>
+            <li>Make sure to remove <code>define('DISABLE_WP_CRON', true)</code> from your wp-config.php</li>
+            <li>Add the <code>define('ALTERNATE_WP_CRON', true);</code> to the wp-config.php</li>
+            <li>Disable W3 total cache plugin as it might cache the cron requests. </li>
+            <li>Submit a bug report to Wordpress</li>
+        </ol>
+        <h3>Test email fails</h3>
+        <p>If your test email fails then is something wrong with your server settings. Talk to your server administrator and
+        he/she will figure it out. </p>
     </div>
 
 
@@ -82,6 +100,8 @@ function emailSub_admin_debug(){
             <p>Test if your server configuration is allowing you to send emails.</p>
             <input type="Submit" value="Test" />
         </form>
+
+
     </div>
 	
 	</div> <!-- End: emailSub_admin -->
