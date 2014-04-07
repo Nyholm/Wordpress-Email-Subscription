@@ -47,7 +47,9 @@ function emailSub_admin_debug(){
 ?>
     <div class="emailSub-leftCol">
         <h2>Email spool info</h2>
-        <p>We are about to send emails to <?php echo $emailDb->getSpoolCount(); ?> recipients.</p>
+        <p>After you publish a new post we put all your subscribers in the emails spool. Then we send emails to the ones
+        in the spool until the spool is empty. </p>
+        <p>The emails spool contains <?php echo $emailDb->getSpoolCount(); ?> recipients.</p>
 
         <h2>Cron status</h2>
         <?php $nextRun = wp_next_scheduled('execute_emailSub_sendEmails');
@@ -59,7 +61,7 @@ function emailSub_admin_debug(){
             $now=new DateTime();
 
             if ($now->diff($nextRunDate)->format('%r%i') < -10) {
-                ?><p color="red">You have some problems with the wordpress cron. </p><?php
+                ?><p style="color:red;">You have some problems with the wordpress cron. </p><?php
             } else {
                 ?><p>The cron will run once again in <?php echo $now->diff($nextRunDate)->format('%r%i minutes and %s seconds'); ?></p><?php
             }
@@ -80,7 +82,7 @@ function emailSub_admin_debug(){
         </ol>
         <h3>Test email fails</h3>
         <p>If your test email fails then is something wrong with your server settings. Talk to your server administrator and
-        he/she will figure it out. </p>
+        he/she will figure it out. You might want to try using the WP SMTP plugin by BoLiQuan to make sure that you may send emails.</p>
     </div>
 
 

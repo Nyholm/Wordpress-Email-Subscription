@@ -22,7 +22,7 @@ class EmailSubscriptionDatabase{
     /**
      * Returns true if email was added. It does also returns true if email already is in the database
      *
-     * @param unknown_type $email
+     * @param string $email
      */
     public function addEmail($email, $language = ""){
         global $wpdb;

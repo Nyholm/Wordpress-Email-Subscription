@@ -46,7 +46,7 @@ function emailSub_admin_export(){
     </div>
 
     <div class="emailSub-rightCol">
-        <?php foreach ($subscriptions as $s) {$subArray[]=$s->email;} ?>
+        <?php $subArray=array(); foreach ($subscriptions as $s) {$subArray[]=$s->email;} ?>
         <h2>One email per line</h2>
         <textarea><?php echo implode("\n", $subArray); ?></textarea>
         <h2>Semi-colon separated</h2>
