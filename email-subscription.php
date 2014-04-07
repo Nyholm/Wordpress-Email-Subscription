@@ -73,14 +73,14 @@ function emailSub_sendEmails(){
 	$emailsToSend=0;
 	$emailDb=new EmailSubscriptionDatabase();
     //TODO make this 5 configurable
-	$emails=$emailDb->getEmailsToSendSubscriptionMails($emailsToSend,5);
+	$emails=$emailDb->getEmailsToSendSubscriptionMails($emailsToSend, 5);
 	
 	//get some values from settings
     global $polylang;
-    $org_subject=get_option('emailSub-subject');
-    $org_body=get_option('emailSub-body');
-    $fromName=get_option('emailSub-from_name');
-    $fromMail=get_option('emailSub-from_email');
+    $org_subject=stripslashes(get_option('emailSub-subject'));
+    $org_body=stripslashes(get_option('emailSub-body'));
+    $fromName=stripslashes(get_option('emailSub-from_name'));
+    $fromMail=stripslashes(get_option('emailSub-from_email'));
 
 	
 	
@@ -165,7 +165,7 @@ function emailSub_prepareString($str, &$post){
 				array_values($replacements),
 				$str
 		);
-	
+
 	return $str;
 }
 
@@ -215,7 +215,7 @@ add_action('future_to_publish', 'emailSub_publishPost',100);
 
 
 /**
- * Return the post exceprt
+ * Return the post excerpt
  * 
  * @param unknown_type $post
  */
@@ -281,8 +281,8 @@ function emailSub_install() {
 
 	//add some options
 	add_option('emailSub-subject','New post on '.get_option('blogname'));
-	add_option('emailSub-body','There is a new post at %site_url%. You can read it here: \n<a href="%post_url%">%post_title%</a> '.
-			'\n\n\n\n To unsubscribe from future mail, follow this link: \n<a href="%unsubscribe_url%">%unsubscribe_url%</a> ');
+	add_option('emailSub-body',"There is a new post at %site_url%. You can read it here: \n".'<a href="%post_url%">%post_title%</a>'.
+			"\n\n\n\n To unsubscribe from future mail, follow this link: \n".'<a href="%unsubscribe_url%">%unsubscribe_url%</a>');
 	add_option('emailSub-from_name','Admin at '.get_option('blogname'));
 	add_option('emailSub-from_email',get_option('admin_email'));
 	add_option('emailSub-promotion',true);
@@ -347,21 +347,56 @@ function emailSub_queryParser ($query) {
 		wp_redirect( home_url().'?unsubscribed' ); 
 		exit;
 	}
+
 	return $query;
 
 }
-add_filter('parse_query', 'emailSub_queryParser'); 
+add_filter('parse_query', 'emailSub_queryParser');
+
 
 /**
  * Register a url to let users unsubscribe
  */
-function emailSub_registerUrl(){
-	add_rewrite_rule('webfish-email-subscription/unsubscribe-(.*)/(.*)/?$',
-			'index.php?emailSub_unsub=$matches[1]&emailSub_email=$matches[2]',"top");
-	add_rewrite_tag('%emailSub_unsub%', '.*');
-	add_rewrite_tag('%emailSub_email%', '.*');
-	global $wp_rewrite;
-	$wp_rewrite->flush_rules();
-	
+function emailSub_registerUrlRules($rules) {
+
+    add_rewrite_tag('%emailSub_unsub%', '([^&]+)');
+    add_rewrite_tag('%emailSub_email%', '([^&]+)');
+
+    $newrules = array();
+    $newrules['webfish-email-subscription/unsubscribe-([^/]+)/([^/]+)/?$'] = 'index.php?page=2&emailSub_unsub=$matches[1]&emailSub_email=$matches[2]';
+
+    $return= $newrules + $rules;
+
+    return $return;
 }
-add_action('init', 'emailSub_registerUrl');
+add_filter('rewrite_rules_array', 'emailSub_registerUrlRules');
+
+
+/**
+ * Flush rules if they are not flushed
+ */
+function emailSub_flushRewriteRules(){
+    $rules = get_option( 'rewrite_rules' );
+
+    if ( ! isset( $rules['webfish-email-subscription/unsubscribe-([^/]+)/([^/]+)/?$'] ) ) {
+        global $wp_rewrite;
+        $wp_rewrite->flush_rules();
+    }
+}
+add_action( 'wp_loaded','emailSub_flushRewriteRules' );
+
+/**
+ * Adding the id var so that WP recognizes it
+ *
+ * @param $vars
+ *
+ * @return mixed
+ */
+function emailSub_registerUrlVars( $vars )
+{
+    array_push($vars, 'emailSub_unsub');
+    array_push($vars, 'emailSub_email');
+    return $vars;
+}
+add_filter('query_vars', 'emailSub_registerUrlVars');
+
