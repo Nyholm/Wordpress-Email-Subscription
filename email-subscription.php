@@ -266,20 +266,19 @@ add_action('wp_enqueue_scripts', 'emailSub_assets');
  * Install the MySQL-tables
  */
 function emailSub_install() {
-	
 	//db version
 	$currentVersion = "2";
-	$dbVersion=get_option("emailSub_db_version");
+	$dbVersion=get_option("emailSub_db_version", false);
 	
-	if (empty($dbVersion)) {
-		add_option("emailSub_db_version", $emailSub_db_version);
+	if ($dbVersion==false) {
+		add_option("emailSub_db_version", $currentVersion);
 	} elseif ($dbVersion==$currentVersion) {
 		//we do not need to update
 		return;
 	}
-	
+
 	global $wpdb;
-	
+
 	//add some options
 	add_option('emailSub-subject','New post on '.get_option('blogname'));
 	add_option('emailSub-body',"There is a new post at %site_url%. You can read it here: \n%post_url% ".
@@ -292,24 +291,20 @@ function emailSub_install() {
 	/*
 	 * Check if tables exists
 	*/
-	$table_name = $wpdb->prefix . "emailSub_addresses";
-	$sql="";
+    $table_name = $wpdb->prefix . "emailSub_addresses";
+    $sql[] = "CREATE TABLE $table_name (
+      email_id INTEGER NOT NULL AUTO_INCREMENT,
+      email VARCHAR(255) NOT NULL,
+      language VARCHAR(255) NOT NULL,
+      PRIMARY KEY (email_id));";
 
-    $sql .= "CREATE TABLE " . $table_name . " (
-      email_id INTEGER  NOT NULL AUTO_INCREMENT,
-      email VARCHAR(255)  NOT NULL,
-      language VARCHAR(255)  NOT NULL,
-      PRIMARY KEY (email_id)
-    );";
 
-	
-	$table_name = $wpdb->prefix . "emailSub_spool";
-    $sql .= "CREATE TABLE " . $table_name . " (
-    spool_id INTEGER  NOT NULL AUTO_INCREMENT,
-    email_id VARCHAR(255)  NOT NULL,
-    post_id INTEGER  NOT NULL,
-    PRIMARY KEY (spool_id)
-    );";
+    $table_name = $wpdb->prefix . "emailSub_spool";
+    $sql[] = "CREATE TABLE $table_name (
+    spool_id INTEGER NOT NULL AUTO_INCREMENT,
+    email_id VARCHAR(255) NOT NULL,
+    post_id INTEGER NOT NULL,
+    PRIMARY KEY (spool_id));";
 
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -358,7 +353,7 @@ function emailSub_queryParser ($query) {
 add_filter('parse_query', 'emailSub_queryParser'); 
 
 /**
- * Register a url to let users unsubscribe 
+ * Register a url to let users unsubscribe
  */
 function emailSub_registerUrl(){
 	add_rewrite_rule('webfish-email-subscription/unsubscribe-(.*)/(.*)/?$',
