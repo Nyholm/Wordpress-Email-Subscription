@@ -265,11 +265,20 @@ add_action('wp_enqueue_scripts', 'emailSub_assets');
 /**
  * Install the MySQL-tables
  */
-function emailSub_install(){
-	global $wpdb;
-
+function emailSub_install() {
+	
 	//db version
-	$emailSub_db_version = "1.1";
+	$currentVersion = "2";
+	$dbVersion=get_option("emailSub_db_version");
+	
+	if (empty($dbVersion)) {
+		add_option("emailSub_db_version", $emailSub_db_version);
+	} elseif ($dbVersion==$currentVersion) {
+		//we do not need to update
+		return;
+	}
+	
+	global $wpdb;
 	
 	//add some options
 	add_option('emailSub-subject','New post on '.get_option('blogname'));
@@ -305,13 +314,15 @@ function emailSub_install(){
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
-    add_option("emailSub_db_version", $emailSub_db_version);
+    update_option("emailSub_db_version", $currentVersion);
 
     emailSub_initPolylang();
 }
-register_activation_hook(__FILE__,'emailSub_install');
+add_action('init','emailSub_install',1);
 
-
+/**
+ * Install polylang
+ */
 function emailSub_initPolylang() {
     global $polylang;
     if(isset($polylang)) {
