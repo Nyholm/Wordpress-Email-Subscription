@@ -281,8 +281,8 @@ function emailSub_install() {
 
 	//add some options
 	add_option('emailSub-subject','New post on '.get_option('blogname'));
-	add_option('emailSub-body',"There is a new post at %site_url%. You can read it here: \n<a href=\"%post_url%\">%post_title%</a> ".
-			"\n\n\n\n To unsubscribe from future mail, follow this link: \n<a href=\"%unsubscribe_url%\">%unsubscribe_url%</a> ");
+	add_option('emailSub-body','There is a new post at %site_url%. You can read it here: \n<a href="%post_url%">%post_title%</a> '.
+			'\n\n\n\n To unsubscribe from future mail, follow this link: \n<a href="%unsubscribe_url%">%unsubscribe_url%</a> ');
 	add_option('emailSub-from_name','Admin at '.get_option('blogname'));
 	add_option('emailSub-from_email',get_option('admin_email'));
 	add_option('emailSub-promotion',true);
