@@ -117,6 +117,8 @@ function emailSub_sendEmails(){
 			
 			//load the excerpt
 			$post->post_excerpt=emailSub_getExcerpt($post);
+			//load the thumbnail
+			$post->post_thumbnail=get_the_post_thumbnail($post_id);
 			$body[$post_id]=emailSub_prepareString($org_body, $post);
 			$subject[$post_id]='=?UTF8?B?'.base64_encode(emailSub_prepareString($org_subject, $post)).'?=';
 		}
@@ -152,6 +154,7 @@ function emailSub_prepareString($str, &$post){
 	$replacements=array(
 		'%post_title%'=>$post->post_title,	
 		'%post_excerpt%'=>$post->post_excerpt,
+		'%post_thumbnail%'=>$post->post_thumbnail,
 		'%post_content%'=>$post->post_content,
 		'%post_author%'=>$username,  // FIXED BY MARTY 7/24/2013
 		'%post_date%'=>$post->post_date,
