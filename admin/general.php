@@ -87,7 +87,7 @@ function emailSub_admin_general(){
 			<tr>
 				<td>Hint:</td>
 				<td><p>HTML is allowed. You may use the following variables: <i>%post_title%, %post_excerpt%, 
-				%post_content%, %post_author%, %post_date%, %post_url%
+				%post_thumbnail%, %post_content%, %post_author%, %post_date%, %post_url%
 				%site_url%, %unsubscribe_url%</i></p></td>
 			</tr>
             <tr><td colspan="2">
