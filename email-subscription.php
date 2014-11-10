@@ -159,7 +159,7 @@ function emailSub_prepareString($str, &$post){
 		'%post_date%'=>$post->post_date,
 		'%post_url%'=>get_permalink($post->ID),
 		'%site_url%'=>get_option('siteurl'),
-		"\n"=>'<br>',//we send is as html
+		"\n\n"=>'<br />',//we send is as html
 	);
 	
 	$str=str_replace(
