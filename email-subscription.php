@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Email subscription
  * Plugin URI: http://www.webfish.se/wp/plugins/email-subscription
- * Version: 1.2.2
+ * Version: 1.2.3
  * Description: Let your visitors subscribe on you posts
  * Author: Tobias Nyholm
  * Author URI: http://www.tnyholm.se
