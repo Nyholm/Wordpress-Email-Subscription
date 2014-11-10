@@ -4,7 +4,7 @@
  * Send latest post to admin
  */
 function emailSub_sendLatestPostToAdmin() {
-    $posts=wp_get_recent_posts(array('numberposts' => 1));
+    $posts=wp_get_recent_posts(array('numberposts' => 1,  'post_status' => 'publish'));
     if (empty($posts)) {
         ?>
         <div class="error"><p>You don't have any published posts.</p></div>
@@ -14,12 +14,12 @@ function emailSub_sendLatestPostToAdmin() {
 
     $emailDb=new EmailSubscriptionDatabase();
     $emailDb->addToSpool(get_option('admin_email'), $post['ID']);
-
+    emailSub_tellCron(0);
 }
 /**
  * Send a test email
  */
-function emailSub_sendTestEmail($headers) {
+function emailSub_sendTestEmail() {
     $fromName=get_option('emailSub-from_name');
     $fromMail=get_option('emailSub-from_email');
     $headers='From: "'.$fromName.'" <'.$fromMail.'>';
