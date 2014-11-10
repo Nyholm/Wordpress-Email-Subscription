@@ -1,6 +1,6 @@
 <?php
 
-function emailSub_admin_general(){
+function emailSub_admin_general() {
 	?><div id='emailSub_admin'><h1>Email Subscriptions</h1>
 
     <?php

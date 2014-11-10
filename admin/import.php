@@ -1,6 +1,6 @@
 <?php
 
-function emailSub_admin_import(){
+function emailSub_admin_import() {
 	$emailDb=new EmailSubscriptionDatabase();
 	?><div id="emailSub_admin" class="emailSub-import">
     <h1>Import</h1>

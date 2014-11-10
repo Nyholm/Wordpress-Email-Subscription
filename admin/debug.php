@@ -1,6 +1,6 @@
 <?php
 
-function emailSub_admin_debug(){
+function emailSub_admin_debug() {
 	$emailDb=new EmailSubscriptionDatabase();
 
 	?><div id='emailSub_admin'><h1>Debug</h1>

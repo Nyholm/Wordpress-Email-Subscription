@@ -1,6 +1,6 @@
 <?php
 
-function emailSub_admin_export(){
+function emailSub_admin_export() {
 	$emailDb=new EmailSubscriptionDatabase();
 
     if(isset($_POST['do'])){
