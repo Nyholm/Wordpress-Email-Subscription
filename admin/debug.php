@@ -14,7 +14,7 @@ function emailSub_sendLatestPostToAdmin() {
 
     $emailDb=new EmailSubscriptionDatabase();
     $emailDb->addToSpool(get_option('admin_email'), $post['ID']);
-    emailSub_tellCron(0);
+    emailSub_sendEmails();
 }
 /**
  * Send a test email
