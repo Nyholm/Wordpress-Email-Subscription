@@ -123,6 +123,25 @@ class EmailSubscriptionDatabase{
     }
 
     /**
+     * Add one email to spool.. Like an administrator when testing..
+     *
+     * @param $email
+     * @param $postId
+     * @param string $language
+     */
+    public function addToSpool($email, $postId, $language = ""){
+        global $wpdb;
+
+        $this->addEmail($email);
+        $wpdb->query(
+            $wpdb->prepare(
+                "INSERT INTO {$this->spool_table} (email_id, post_id)
+					SELECT a.email_id, '%d' FROM {$this->address_table} a WHERE email='%s' AND language='%s'"
+                ,array($postId, $email, $language))
+        );
+    }
+
+    /**
      * Removes an emails from spool and address table
      *
      * @param string $email

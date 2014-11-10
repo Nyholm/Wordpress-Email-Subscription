@@ -1,5 +1,48 @@
 <?php
 
+/**
+ * Send latest post to admin
+ */
+function emailSub_sendLatestPostToAdmin() {
+    $posts=wp_get_recent_posts(array('numberposts' => 1));
+    if (empty($posts)) {
+        ?>
+        <div class="error"><p>You don't have any published posts.</p></div>
+        <?php
+    }
+    $post=array_pop($posts);
+
+    $emailDb=new EmailSubscriptionDatabase();
+    $emailDb->addToSpool(get_option('admin_email'), $post['ID']);
+
+}
+/**
+ * Send a test email
+ */
+function emailSub_sendTestEmail($headers) {
+    $fromName=get_option('emailSub-from_name');
+    $fromMail=get_option('emailSub-from_email');
+    $headers='From: "'.$fromName.'" <'.$fromMail.'>';
+
+    if (wp_mail(
+        get_option('admin_email'),
+        "Test email",
+        "Your server can send emails. \n Timestamp: " . date('Y-m-d H:i:s'),
+        $headers
+    )
+    ) { //succeed
+        //print message
+        ?>
+        <div class="updated"><p>A test email was sent to <?php echo get_option('admin_email'); ?>.</p></div>
+    <?php
+    } else {
+        //print message
+        ?>
+        <div class="error"><p>We failed to send a test email.</p></div>
+    <?php
+    }
+}
+
 function emailSub_admin_debug() {
 	$emailDb=new EmailSubscriptionDatabase();
 
@@ -9,26 +52,12 @@ function emailSub_admin_debug() {
     if(isset($_POST['do'])){
 		//Test email
 		if($_POST['do']=='testEmail'){
-            $fromName=get_option('emailSub-from_name');
-            $fromMail=get_option('emailSub-from_email');
-			$headers='From: "'.$fromName.'" <'.$fromMail.'>';
-			if(wp_mail(
-					get_option('admin_email'),
-					"Test email",
-					"Your server can send emails. \n Timestamp: ".date('Y-m-d H:i:s'),
-					$headers
-				)){//succeed
-				//print message
-				?>
-					<div class="updated"><p>A test email was sent to <?php echo get_option('admin_email');?>.</p></div>
-				<?php 
-			}
-			else{
-				//print message
-				?>
-				<div class="error"><p>We failed to send a test email.</p></div>
-				<?php 
-			}
+
+            if ($_POST['test-email']) {
+                emailSub_sendTestEmail();
+            } elseif ($_POST['latest-post']) {
+                emailSub_sendLatestPostToAdmin();
+            }
 		} elseif($_POST['do']=='forceSend') {
             $nextRun = wp_next_scheduled('execute_emailSub_sendEmails');
             if ($nextRun!==false) {
@@ -100,7 +129,8 @@ function emailSub_admin_debug() {
             <input type="hidden" name="do" value="testEmail" />
             <h3>Test your server configuration</h3>
             <p>Test if your server configuration is allowing you to send emails.</p>
-            <input type="Submit" value="Test" />
+            <input type="Submit" name="test-email" value="Send you test email" />
+            <input type="Submit" name="latest-post" value="Send you the latest post" />
         </form>
 
 
