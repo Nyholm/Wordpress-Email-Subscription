@@ -47,7 +47,7 @@ class EmailSubscriptionWidget extends WP_Widget {
             echo $before_title.$instance['title'].$after_title;
         }
         ?>
-        <ul id='emailSub-widget'>
+        <div id='emailSub-widget'>
             <div id="emailSub-output" style="display:none;"></div>
             <form id="emailSub-form" action="<?php echo site_url('wp-admin/admin-ajax.php')?>">
                 <input type="hidden" name="success_msg" id="emailSub-success" value="<?php echo $instance['success_msg'];?>" />
@@ -65,10 +65,7 @@ class EmailSubscriptionWidget extends WP_Widget {
                 <div style="margin-top: 0.4em; font-size: 70%;">Created by <a href="http://www.webfish.se">Webfish</a>.</div>
                 <?php endif; ?>
             </form>
-
-
-
-        </ul>
+        </div>
         <?php
         echo $after_widget;
     }
